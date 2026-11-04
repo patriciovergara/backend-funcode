@@ -1,5 +1,31 @@
 import pool from "../config/db.js";
 
+function mapPost(row) {
+  const post = {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    price: row.price === null ? null : Number(row.price),
+    price_type: row.price_type,
+    image_url: row.image_url,
+    category: {
+      id: row.category_id,
+      name: row.category_name,
+    },
+    user: {
+      id: row.user_id,
+      name: row.user_name,
+    },
+    created_at: row.created_at,
+  };
+
+  if (row.updated_at !== undefined) {
+    post.updated_at = row.updated_at;
+  }
+
+  return post;
+}
+
 export async function listPosts({
   page,
   limit,
@@ -28,6 +54,7 @@ export async function listPosts({
       p.title,
       p.description,
       p.price,
+      p.price_type,
       p.image_url,
       p.created_at,
       c.id AS category_id,
@@ -54,25 +81,8 @@ export async function listPosts({
     offset,
   ]);
 
-  const posts = postsResult.rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    price: Number(row.price),
-    image_url: row.image_url,
-    category: {
-      id: row.category_id,
-      name: row.category_name,
-    },
-    user: {
-      id: row.user_id,
-      name: row.user_name,
-    },
-    created_at: row.created_at,
-  }));
-
   return {
-    posts,
+    posts: postsResult.rows.map(mapPost),
     pagination: {
       page,
       limit,
@@ -80,11 +90,13 @@ export async function listPosts({
     },
   };
 }
+
 export async function createPost({
   userId,
   title,
   description,
   price,
+  price_type,
   image_url,
   category_id,
 }) {
@@ -96,9 +108,10 @@ export async function createPost({
         title,
         description,
         price,
+        price_type,
         image_url
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     )
     SELECT
@@ -106,6 +119,7 @@ export async function createPost({
       p.title,
       p.description,
       p.price,
+      p.price_type,
       p.image_url,
       p.created_at,
       c.id AS category_id,
@@ -123,29 +137,15 @@ export async function createPost({
     title,
     description,
     price,
+    price_type,
     image_url,
   ];
 
   const result = await pool.query(query, values);
-  const row = result.rows[0];
 
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    price: Number(row.price),
-    image_url: row.image_url,
-    category: {
-      id: row.category_id,
-      name: row.category_name,
-    },
-    user: {
-      id: row.user_id,
-      name: row.user_name,
-    },
-    created_at: row.created_at,
-  };
+  return mapPost(result.rows[0]);
 }
+
 export async function findPostById(id) {
   const query = `
     SELECT
@@ -153,6 +153,7 @@ export async function findPostById(id) {
       p.title,
       p.description,
       p.price,
+      p.price_type,
       p.image_url,
       p.created_at,
       p.updated_at,
@@ -169,34 +170,16 @@ export async function findPostById(id) {
   const result = await pool.query(query, [id]);
   const row = result.rows[0];
 
-  if (!row) {
-    return null;
-  }
-
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    price: Number(row.price),
-    image_url: row.image_url,
-    category: {
-      id: row.category_id,
-      name: row.category_name,
-    },
-    user: {
-      id: row.user_id,
-      name: row.user_name,
-    },
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  };
+  return row ? mapPost(row) : null;
 }
+
 export async function updatePost({
   postId,
   userId,
   title,
   description,
   price,
+  priceType,
   imageUrl,
   categoryId,
 }) {
@@ -219,9 +202,10 @@ export async function updatePost({
       price = $3,
       image_url = $4,
       category_id = $5,
+      price_type = $6,
       updated_at = NOW()
-    WHERE id = $6
-      AND user_id = $7
+    WHERE id = $7
+      AND user_id = $8
     RETURNING id
   `;
 
@@ -231,6 +215,7 @@ export async function updatePost({
     price,
     imageUrl,
     categoryId,
+    priceType,
     postId,
     userId,
   ]);
@@ -241,6 +226,7 @@ export async function updatePost({
 
   return findPostById(result.rows[0].id);
 }
+
 export async function deletePost({ postId, userId }) {
   const query = `
     DELETE FROM posts
@@ -253,6 +239,7 @@ export async function deletePost({ postId, userId }) {
 
   return result.rowCount > 0;
 }
+
 export async function listOwnPosts({ userId, page, limit }) {
   const offset = (page - 1) * limit;
 
@@ -263,6 +250,7 @@ export async function listOwnPosts({ userId, page, limit }) {
         p.title,
         p.description,
         p.price,
+        p.price_type,
         p.image_url,
         p.created_at,
         p.updated_at,
@@ -291,6 +279,7 @@ export async function listOwnPosts({ userId, page, limit }) {
               'title', pp.title,
               'description', pp.description,
               'price', pp.price,
+              'price_type', pp.price_type,
               'image_url', pp.image_url,
               'category', json_build_object(
                 'id', pp.category_id,

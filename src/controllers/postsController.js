@@ -72,6 +72,7 @@ export async function updatePublication(req, res, next) {
       title,
       description,
       price,
+      price_type,
       image_url,
       category_id,
     } = req.postInput;
@@ -82,6 +83,7 @@ export async function updatePublication(req, res, next) {
       title,
       description,
       price,
+      priceType: price_type,
       imageUrl: image_url,
       categoryId: category_id,
     });
@@ -98,7 +100,13 @@ export async function updatePublication(req, res, next) {
       post,
     });
   } catch (error) {
-    if (error.code === "CATEGORY_NOT_FOUND") {
+    if (
+      error.code === "CATEGORY_NOT_FOUND" ||
+      (
+        error.code === "23503" &&
+        error.constraint === "posts_category_fk"
+      )
+    ) {
       return res.status(400).json({
         message: "La categoría seleccionada no existe",
       });
