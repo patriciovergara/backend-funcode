@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import {
   getPosts,
   createPublication,
@@ -6,8 +7,10 @@ import {
   updatePublication,
   deletePublication,
 } from "../controllers/postsController.js";
+
 import { validateCatalogQuery } from "../middlewares/validateCatalogQuery.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
+import { requireAdmin } from "../middlewares/requireAdmin.js";
 import { validatePost } from "../middlewares/validatePost.js";
 import { validatePostId } from "../middlewares/validatePostId.js";
 
@@ -17,10 +20,29 @@ router.get("/", validateCatalogQuery, getPosts);
 
 router.get("/:id", validatePostId, getPostById);
 
-router.put("/:id", requireAuth, validatePostId, validatePost, updatePublication);
+router.post(
+  "/",
+  requireAuth,
+  requireAdmin,
+  validatePost,
+  createPublication
+);
 
-router.post("/", requireAuth, validatePost, createPublication);
+router.put(
+  "/:id",
+  requireAuth,
+  requireAdmin,
+  validatePostId,
+  validatePost,
+  updatePublication
+);
 
-router.delete("/:id", requireAuth, validatePostId, deletePublication);
+router.delete(
+  "/:id",
+  requireAuth,
+  requireAdmin,
+  validatePostId,
+  deletePublication
+);
 
 export default router;
