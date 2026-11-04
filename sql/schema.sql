@@ -64,8 +64,8 @@ CREATE INDEX posts_category_idx
 
 INSERT INTO categories (name)
 VALUES
-    (U&'P\00E1ginas web'),
-    (U&'Cat\00E1logos digitales'),
-    (U&'Sistemas de gesti\00F3n');
+  ('Paginas web'),
+  ('Catalogos digitales'),
+  ('Sistemas de gestion');
 
 COMMIT;
