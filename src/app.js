@@ -3,6 +3,7 @@ import cors from "cors";
 import usersRoutes from "./routes/usersRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import postsRoutes from "./routes/postsRoutes.js";
+import serviceRequestsRoutes from "./routes/serviceRequestsRoutes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(express.json({ limit: "100kb" }));
 app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1", authRoutes);
 app.use("/api/v1/posts", postsRoutes);
+app.use("/api/v1/service-requests", serviceRequestsRoutes);
 
 app.get("/api/v1/health", (req, res) => {
   res.status(200).json({
