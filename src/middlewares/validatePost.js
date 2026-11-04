@@ -13,7 +13,14 @@ export function validatePost(req, res, next) {
     });
   }
 
-  const { title, description, price, image_url, category_id } = body;
+  const {
+    title,
+    description,
+    price,
+    price_type = "fixed",
+    image_url,
+    category_id,
+  } = body;
 
   if (
     typeof title !== "string" ||
@@ -48,7 +55,19 @@ export function validatePost(req, res, next) {
     });
   }
 
-  if (
+  if (!["fixed", "from", "quote"].includes(price_type)) {
+    return res.status(400).json({
+      message: "price_type debe ser fixed, from o quote",
+    });
+  }
+
+  if (price_type === "quote") {
+    if (price !== null) {
+      return res.status(400).json({
+        message: "Los servicios a cotizar deben enviar price como null",
+      });
+    }
+  } else if (
     typeof price !== "number" ||
     !Number.isSafeInteger(price) ||
     price <= 0 ||
@@ -91,6 +110,7 @@ export function validatePost(req, res, next) {
     title: normalizedTitle,
     description: normalizedDescription,
     price,
+    price_type,
     image_url: normalizedImageUrl,
     category_id,
   };
