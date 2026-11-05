@@ -89,20 +89,35 @@ export function validatePost(req, res, next) {
     });
   }
 
-  try {
-    const imageUrl = new URL(normalizedImageUrl);
+  const localImagePattern =
+    /^\/assets\/servicios\/[a-z0-9][a-z0-9_-]*\.(?:webp|png|jpe?g)$/;
 
-    if (
-      !["http:", "https:"].includes(imageUrl.protocol) ||
-      imageUrl.username ||
-      imageUrl.password ||
-      normalizedImageUrl.includes("\u0000")
-    ) {
-      throw new Error("URL no permitida");
+  let validImageSource = false;
+
+  if (
+    normalizedImageUrl.length > 0 &&
+    !normalizedImageUrl.includes("\u0000")
+  ) {
+    if (localImagePattern.test(normalizedImageUrl)) {
+      validImageSource = true;
+    } else {
+      try {
+        const imageUrl = new URL(normalizedImageUrl);
+
+        validImageSource =
+          ["http:", "https:"].includes(imageUrl.protocol) &&
+          !imageUrl.username &&
+          !imageUrl.password;
+      } catch {
+        validImageSource = false;
+      }
     }
-  } catch {
+  }
+
+  if (!validImageSource) {
     return res.status(400).json({
-      message: "La imagen debe ser una URL válida con protocolo HTTP o HTTPS",
+      message:
+        "La imagen debe ser una ruta de /assets/servicios/ o una URL HTTP/HTTPS valida.",
     });
   }
 
