@@ -12,16 +12,30 @@ La versión documentada del backend incluye:
 
 - Conexión con PostgreSQL.
 - Registro e inicio de sesión.
-- Autenticación mediante JWT.
+- Autenticación mediante JWT con `jti` para revocación de tokens.
+- Sesión protegida con cookie `HttpOnly` y `SameSite=Lax`.
+- Logout con invalidación y limpieza de sesión.
+- Protección de la API con `helmet`, CORS restringido, HSTS en producción y rate limiting.
+- Registro de eventos de seguridad e intentos fallidos de login.
 - Perfil autenticado.
 - Catálogo y detalle públicos.
 - Operaciones sobre publicaciones.
 - Validaciones y manejo de errores.
 - Pruebas automatizadas de integración de cuatro escenarios.
 
-La documentación original corresponde al Hito 3.
+La seguridad del backend fue reforzada para reducir riesgos de abuso, brute force, exposición de tokens y acceso desde orígenes no autorizados. Esto se considera un cierre de seguridad previo al despliegue en producción y no reemplaza la validación final del entorno remoto.
 
-Actualmente se prepara la integración y el despliegue. No se considera validado el entorno de producción hasta completar las pruebas sobre los servicios remotos.
+## Seguridad y hardening
+
+La capa de seguridad del backend incluye:
+
+- `helmet` para reducir encabezados y riesgos de XSS/Clickjacking.
+- `express-rate-limit` para limitar intentos de login y solicitudes intensivas.
+- CORS con whitelist de orígenes configurados en `FRONTEND_ORIGIN`.
+- `NODE_ENV=production` activa HSTS y deshabilita modos inseguros.
+- JWT con `jti`, soporte de revocación y verificación de tokens revocados antes de autorizar peticiones.
+- Cookies `HttpOnly` para evitar que el token se exponga en JavaScript del cliente.
+- Registro de eventos de seguridad para revocación, intentos fallidos y alertas por abuso.
 
 ## Modelo de permisos: revisión pendiente
 
@@ -45,6 +59,8 @@ No asumir que una ruta es exclusiva de administrador porque el frontend oculta s
 - `bcryptjs`.
 - `jsonwebtoken`.
 - `cors`.
+- `helmet`.
+- `express-rate-limit`.
 - Supertest.
 - `node:test`.
 
@@ -79,19 +95,24 @@ Configuración local documentada:
 ```env
 PORT=3000
 FRONTEND_ORIGIN=http://localhost:5173
+NODE_ENV=development
 
 PGHOST=localhost
 PGPORT=5432
 PGDATABASE=funcode
 PGUSER=postgres
-PGPASSWORD=REEMPLAZAR
+PGPASSWORD=REEMPLAZAR_POR_CONTRASEÑA_LOCAL
 
-JWT_SECRET=REEMPLAZAR_POR_UN_SECRETO_SEGURO
+JWT_SECRET=REEMPLAZAR_POR_UN_SECRETO_ALEATORIO_LOCAL
 
 TEST_USER_EMAIL=REEMPLAZAR
 TEST_USER_PASSWORD=REEMPLAZAR
 TEST_POST_ID=REEMPLAZAR
 ```
+
+En producción, `NODE_ENV` debe configurarse en `production` y `FRONTEND_ORIGIN` debe contener únicamente los orígenes autorizados. Nunca dejar valores comodín ni expedir JWTs con secretos débiles.
+
+El correo corporativo oficial del proyecto es `contacto@funcode.cl` y debe configurarse a través de Zoho Mail/SMTP con las variables `CONTACT_EMAIL`, `SMTP_HOST`, `SMTP_USER` y `SMTP_PASS`.
 
 Generar un secreto JWT:
 
@@ -163,6 +184,17 @@ Con `PORT=3000`, la URL base local es:
 ```text
 http://localhost:3000/api/v1
 ```
+
+## Autenticación y sesión
+
+El backend usa JWT para la identidad del usuario y los guarda en una cookie `auth_token` con `httpOnly: true`.
+
+- El token no se devuelve ni se expone dentro del cuerpo JSON del login.
+- El cliente debe enviar la sesión mediante cookie, con compatibilidad para `Authorization` cuando exista un flujo legado.
+- `requireAuth` valida firma, expiración, emisor, audiencia y revocación del `jti` antes de autorizar la operación.
+- `logout` invalida el token actual y limpia la cookie del navegador.
+
+Esto reduce la exposición del token en el navegador y mejora la resistencia frente a XSS y reutilización de credenciales.
 
 ## Estructura general
 
