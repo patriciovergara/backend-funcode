@@ -54,3 +54,20 @@ export async function sendContactEmail({ name, email, phone, message }) {
     `,
   });
 }
+
+export async function sendVerificationEmail({ email, code }) {
+  if (!transporter) {
+    throw new Error("SMTP no configurado");
+  }
+
+  const result = await transporter.sendMail({
+    from: `"Funcode" <${smtpUser}>`,
+    to: email,
+    subject: "Tu código de verificación de Funcode",
+    text: `Tu código de verificación es: ${code}\n\nCaduca en 10 minutos. Si no solicitaste esta cuenta, ignora este correo.`,
+  });
+
+  if (!result.accepted?.length) {
+    throw new Error("El servidor de correo no aceptó el destinatario");
+  }
+}

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   registerUser,
+  verifyRegistration,
   getCurrentUser,
 } from "../controllers/usersController.js";
 import { validateRegister } from "../middlewares/validateRegister.js";
@@ -11,6 +12,7 @@ import { validateMyPostsQuery } from "../middlewares/validateMyPostsQuery.js";
 const router = Router();
 
 router.post("/", validateRegister, registerUser);
+router.post("/verify", verifyRegistration);
 router.get("/me/posts", requireAuth, validateMyPostsQuery, getMyPosts);
 
 router.get("/me", requireAuth, getCurrentUser);

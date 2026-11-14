@@ -56,6 +56,22 @@ const serviceRequestLimiter = rateLimit({
   },
 });
 
+const registrationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiados intentos de registro. Inténtalo más tarde." },
+});
+
+const verificationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiados intentos de verificación. Inténtalo más tarde." },
+});
+
 const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
@@ -98,6 +114,8 @@ app.use(
 app.use(apiLimiter);
 app.use("/api/v1/login", loginLimiter);
 app.use("/api/v1/service-requests", serviceRequestLimiter);
+app.use("/api/v1/users/verify", verificationLimiter);
+app.post("/api/v1/users", registrationLimiter);
 app.use(express.json({ limit: "100kb" }));
 app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1", authRoutes);

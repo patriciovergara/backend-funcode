@@ -150,6 +150,7 @@ psql -h localhost -U postgres -d funcode -f sql/migrations/004_category_names_as
 psql -h localhost -U postgres -d funcode -f sql/migrations/005_security_audit.sql
 psql -h localhost -U postgres -d funcode -f sql/migrations/006_projects.sql
 psql -h localhost -U postgres -d funcode -f sql/migrations/007_litigio_project_image.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/008_email_verification.sql
 ```
 
 Para una base que ya tiene las migraciones `001` a `005`, ejecutar las migraciones `006` y `007`:
@@ -208,6 +209,9 @@ http://localhost:3000/api/v1
 
 El backend usa JWT para la identidad del usuario y los guarda en una cookie `auth_token` con `httpOnly: true`.
 
+- El registro de cuentas nuevas requiere un código enviado por SMTP. El código vence en 10 minutos y permite cinco intentos; para solicitar otro, se inicia nuevamente el registro. Las cuentas existentes conservan su acceso.
+- Antes de activar el registro en un entorno, aplicar la migración `008_email_verification.sql` y configurar y comprobar el envío SMTP. Si falla el envío, no se crea la cuenta.
+- Los registros pendientes vencidos se eliminan al iniciar un nuevo registro; si se necesita una política de retención más estricta, programar su eliminación periódica.
 - El token no se devuelve ni se expone dentro del cuerpo JSON del login.
 - El cliente debe enviar la sesión mediante cookie, con compatibilidad para `Authorization` cuando exista un flujo legado.
 - `requireAuth` valida firma, expiración, emisor, audiencia y revocación del `jti` antes de autorizar la operación.
@@ -327,11 +331,29 @@ Content-Type: application/json
 }
 ```
 
-Respuestas documentadas:
+Respuestas:
 
-- `201`: usuario creado.
+- `202`: código enviado; incluye `verificationId` para el siguiente paso. La cuenta aún no existe.
 - `400`: datos inválidos.
 - `409`: correo ya registrado.
+- `429`: límite de intentos alcanzado.
+- `503`: no se pudo enviar el correo.
+
+Enviar el código recibido para crear la cuenta:
+
+```http
+POST /api/v1/users/verify
+Content-Type: application/json
+```
+
+```json
+{
+  "verificationId": "ID_DEVUELTO_POR_EL_REGISTRO",
+  "code": "123456"
+}
+```
+
+La respuesta es `201` si se verificó y creó la cuenta, `400` si el código es incorrecto, venció o agotó los intentos, y `409` si el correo ya fue registrado.
 
 La respuesta no debe incluir la contraseña ni su hash.
 

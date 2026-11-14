@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "node --env-file=.env --test src/tests/api.test.js src/tests/validateProject.test.js",
+    "test": "node --env-file=.env --test src/tests/api.test.js src/tests/validateProject.test.js src/tests/emailVerification.test.js src/tests/registrationMail.test.js",
     "dev": "node --watch --env-file=.env src/server.js",
     "db:check": "node --env-file=.env src/scripts/checkDb.js"
   },
