@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import postsRoutes from "./routes/postsRoutes.js";
 import serviceRequestsRoutes from "./routes/serviceRequestsRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import projectsRoutes from "./routes/projectsRoutes.js";
 
 const app = express();
 
@@ -103,6 +104,7 @@ app.use("/api/v1", authRoutes);
 app.use("/api/v1/posts", postsRoutes);
 app.use("/api/v1/service-requests", serviceRequestsRoutes);
 app.use("/api/v1/contact", contactRoutes);
+app.use("/api/v1/projects", projectsRoutes);
 
 app.get("/api/v1/health", (req, res) => {
   res.status(200).json({

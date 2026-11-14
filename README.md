@@ -20,6 +20,7 @@ La versión documentada del backend incluye:
 - Perfil autenticado.
 - Catálogo y detalle públicos.
 - Operaciones sobre publicaciones.
+- Portafolio público y gestión administrativa de proyectos realizados.
 - Validaciones y manejo de errores.
 - Pruebas automatizadas de integración de cuatro escenarios.
 
@@ -37,18 +38,15 @@ La capa de seguridad del backend incluye:
 - Cookies `HttpOnly` para evitar que el token se exponga en JavaScript del cliente.
 - Registro de eventos de seguridad para revocación, intentos fallidos y alertas por abuso.
 
-## Modelo de permisos: revisión pendiente
+## Modelo de permisos
 
-La implementación documentada originalmente permite:
+La API aplica autorización en el backend:
 
-- Crear publicaciones con autenticación.
-- Editar y eliminar publicaciones propias.
+- Crear publicaciones solo con sesión de administrador.
+- Editar y eliminar publicaciones con sesión de administrador, manteniendo el control de propiedad existente.
+- Crear, editar, eliminar y administrar proyectos solo con sesión de administrador.
 
-El objetivo comercial actual es que solo la administración de Funcode gestione el catálogo.
-
-Antes de abrir el sitio al público, comprobar e implementar los permisos administrativos en el backend.
-
-No asumir que una ruta es exclusiva de administrador porque el frontend oculta sus botones.
+Ocultar enlaces en el frontend no reemplaza estos controles; cada ruta protegida valida el rol desde el backend.
 
 ## Tecnologías
 
@@ -142,6 +140,27 @@ Desde una terminal:
 psql -h localhost -U postgres -d funcode -f sql/schema.sql
 ```
 
+Después del esquema inicial, ejecutar las migraciones pendientes en orden numérico. Para una base nueva:
+
+```bash
+psql -h localhost -U postgres -d funcode -f sql/migrations/001_post_price_types.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/002_service_requests.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/003_user_roles.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/004_category_names_ascii.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/005_security_audit.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/006_projects.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/007_litigio_project_image.sql
+```
+
+Para una base que ya tiene las migraciones `001` a `005`, ejecutar las migraciones `006` y `007`:
+
+```bash
+psql -h localhost -U postgres -d funcode -f sql/migrations/006_projects.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/007_litigio_project_image.sql
+```
+
+La migración `006` crea la tabla `projects` e incorpora como ejemplos iniciales los proyectos `litigiomunicipal.cl` y `routeseg.cl`. Revisar las migraciones antes de ejecutarlas en producción y respaldar la base de datos.
+
 El esquema original documenta:
 
 - `users`.
@@ -201,6 +220,7 @@ Esto reduce la exposición del token en el navegador y mejora la resistencia fre
 ```text
 backend-funcode/
 ├── sql/
+│   ├── migrations/
 │   └── schema.sql
 ├── src/
 │   ├── config/
@@ -235,7 +255,7 @@ backend-funcode/
 
 Todas las rutas siguientes utilizan el prefijo `/api/v1`.
 
-Los permisos corresponden al contrato original y deben actualizarse cuando se implemente o confirme la autorización administrativa.
+Las rutas protegidas validan la sesión y el rol en el backend.
 
 | Método | Ruta | Acceso original | Descripción |
 |---|---|---|---|
@@ -246,9 +266,14 @@ Los permisos corresponden al contrato original y deben actualizarse cuando se im
 | GET | `/users/me/posts` | Autenticado | Publicaciones propias. |
 | GET | `/posts` | Público | Catálogo. |
 | GET | `/posts/:id` | Público | Detalle. |
-| POST | `/posts` | Autenticado | Crear publicación. |
-| PUT | `/posts/:id` | Propietario | Actualizar publicación. |
-| DELETE | `/posts/:id` | Propietario | Eliminar publicación. |
+| POST | `/posts` | Administrador | Crear publicación. |
+| PUT | `/posts/:id` | Administrador y propietario | Actualizar publicación. |
+| DELETE | `/posts/:id` | Administrador y propietario | Eliminar publicación. |
+| GET | `/projects` | Público | Lista proyectos publicados. |
+| GET | `/projects/manage` | Administrador | Lista todos los proyectos, incluidos borradores. |
+| POST | `/projects` | Administrador | Crear proyecto. |
+| PUT | `/projects/:id` | Administrador | Actualizar proyecto. |
+| DELETE | `/projects/:id` | Administrador | Eliminar proyecto. |
 
 No se documenta aquí un endpoint de cotizaciones porque debe verificarse su implementación real.
 
@@ -270,7 +295,7 @@ Esta respuesta comprueba que Express responde. No demuestra por sí sola que Pos
 
 ## Autenticación
 
-Enviar el JWT en el encabezado:
+La sesión se establece en una cookie `HttpOnly` al iniciar sesión. El cliente web envía esa cookie con `credentials: "include"`. `Authorization: Bearer ...` se mantiene disponible para clientes compatibles.
 
 ```http
 Authorization: Bearer TOKEN_JWT
@@ -326,7 +351,7 @@ Content-Type: application/json
 
 Respuestas documentadas:
 
-- `200`: token y datos del usuario.
+- `200`: datos del usuario; el JWT se entrega mediante cookie `HttpOnly`, no en el JSON.
 - `400`: datos inválidos.
 - `401`: credenciales incorrectas.
 
@@ -358,6 +383,21 @@ El contrato original utiliza 12 resultados por página.
   }
 }
 ```
+
+## Portafolio de proyectos
+
+La ruta pública `GET /api/v1/projects` devuelve solamente proyectos publicados.
+La administración se realiza con cookie de sesión de un usuario `admin`:
+
+- `GET /api/v1/projects/manage`
+- `POST /api/v1/projects`
+- `PUT /api/v1/projects/:id`
+- `DELETE /api/v1/projects/:id`
+
+El cuerpo de creación y actualización contiene `title`, `description`,
+`project_url`, `image_url` (opcional), `technologies` (lista de textos),
+`featured`, `is_published` y `display_order`. Los enlaces externos aceptan
+únicamente URLs HTTP o HTTPS.
 
 ## Crear o editar publicaciones
 

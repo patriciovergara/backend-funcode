@@ -62,13 +62,25 @@ describe("API de Funcode", () => {
 
     assert.equal(loginResponse.status, 200);
 
-    const token = loginResponse.body.token;
-
     const response = await request(app)
       .get(`${baseURL}/users/me/posts?page=0`)
-      .set("Authorization", `Bearer ${token}`);
+      .set("Cookie", loginResponse.headers["set-cookie"]);
 
     assert.equal(response.status, 400);
+  });
+
+  test("GET /projects/manage rechaza solicitudes sin sesión", async () => {
+    const response = await request(app).get(`${baseURL}/projects/manage`);
+
+    assert.equal(response.status, 401);
+  });
+
+  test("POST /projects rechaza solicitudes sin sesión", async () => {
+    const response = await request(app)
+      .post(`${baseURL}/projects`)
+      .send({});
+
+    assert.equal(response.status, 401);
   });
 });
 
