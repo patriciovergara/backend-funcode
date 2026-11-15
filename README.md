@@ -193,6 +193,16 @@ Inicio:
 npm start
 ```
 
+`npm start` no carga el archivo `.env`: en un servidor, las variables de entorno deben configurarse en el panel del proveedor. Para trabajar en local, usar `npm run dev`.
+
+Comprobar que la API y la base de datos responden:
+
+```text
+GET /api/v1/health
+```
+
+Devuelve `200` con `"database": "ok"`, o `503` si la base de datos no responde.
+
 Consultar todos los scripts:
 
 ```bash

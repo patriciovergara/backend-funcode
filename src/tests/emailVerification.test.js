@@ -77,6 +77,12 @@ test("sin SMTP no se crea la cuenta ni queda un registro pendiente", async () =>
   assert.equal((await pool.query("SELECT id FROM pending_registrations WHERE email = $1", [newEmail])).rowCount, 0);
 });
 
+test("/health confirma que la API y la base de datos responden", async () => {
+  const response = await request(app).get("/api/v1/health");
+  assert.equal(response.status, 200);
+  assert.equal(response.body.database, "ok");
+});
+
 after(async () => {
   await pool.query("DELETE FROM pending_registrations WHERE id = ANY($1::uuid[])", [ids]);
   await pool.query("DELETE FROM users WHERE email = $1", [email]);

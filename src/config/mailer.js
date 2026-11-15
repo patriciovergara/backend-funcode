@@ -21,12 +21,34 @@ if (smtpHost && smtpUser && smtpPass) {
   });
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export function renderContactHtml({ name, email, phone, message }) {
+  return `
+      <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
+        <h2 style="margin: 0 0 16px;">Nuevo contacto desde Funcode</h2>
+        <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+        <p><strong>Teléfono:</strong> ${escapeHtml(phone || "No indicado")}</p>
+        <p><strong>Mensaje:</strong></p>
+        <div style="padding: 12px 16px; background: #f3f4f6; border-radius: 8px;">${escapeHtml(message).replace(/\r?\n/g, "<br />")}</div>
+      </div>
+    `;
+}
+
 export async function sendContactEmail({ name, email, phone, message }) {
   if (!transporter) {
     throw new Error("SMTP no configurado");
   }
 
-  const subject = `Nuevo contacto Funcode: ${name}`;
+  const subject = `Nuevo contacto Funcode: ${name.replace(/\s+/g, " ")}`;
   const text = [
     `Nombre: ${name}`,
     `Email: ${email}`,
@@ -42,16 +64,7 @@ export async function sendContactEmail({ name, email, phone, message }) {
     replyTo: email,
     subject,
     text,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
-        <h2 style="margin: 0 0 16px;">Nuevo contacto desde Funcode</h2>
-        <p><strong>Nombre:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Teléfono:</strong> ${phone || "No indicado"}</p>
-        <p><strong>Mensaje:</strong></p>
-        <div style="padding: 12px 16px; background: #f3f4f6; border-radius: 8px;">${message.replace(/\n/g, "<br />")}</div>
-      </div>
-    `,
+    html: renderContactHtml({ name, email, phone, message }),
   });
 }
 

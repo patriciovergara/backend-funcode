@@ -8,6 +8,7 @@ import postsRoutes from "./routes/postsRoutes.js";
 import serviceRequestsRoutes from "./routes/serviceRequestsRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import projectsRoutes from "./routes/projectsRoutes.js";
+import pool from "./config/db.js";
 
 const app = express();
 
@@ -124,10 +125,22 @@ app.use("/api/v1/service-requests", serviceRequestsRoutes);
 app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/projects", projectsRoutes);
 
-app.get("/api/v1/health", (req, res) => {
-  res.status(200).json({
-    message: "API de Funcode funcionando",
-  });
+app.get("/api/v1/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+
+    return res.status(200).json({
+      message: "API de Funcode funcionando",
+      database: "ok",
+    });
+  } catch (error) {
+    console.error("Falló la comprobación de salud de la base de datos:", error.message);
+
+    return res.status(503).json({
+      message: "API disponible, pero la base de datos no responde",
+      database: "error",
+    });
+  }
 });
 
 app.use((req, res) => {
