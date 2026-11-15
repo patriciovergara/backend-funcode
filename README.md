@@ -151,7 +151,15 @@ psql -h localhost -U postgres -d funcode -f sql/migrations/005_security_audit.sq
 psql -h localhost -U postgres -d funcode -f sql/migrations/006_projects.sql
 psql -h localhost -U postgres -d funcode -f sql/migrations/007_litigio_project_image.sql
 psql -h localhost -U postgres -d funcode -f sql/migrations/008_email_verification.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/009_post_original_price.sql
 ```
+
+La migración `009` permite guardar un precio anterior opcional, mayor que el
+precio actual, para los servicios con precio fijo o desde. No crea ofertas
+automáticamente. Ejecútala antes de desplegar una versión de la API que la use.
+Para el catálogo original de Funcode, `sql/manual/actualizar_ofertas_catalogo.sql`
+registra las cuatro ofertas y retira notas internas de la tienda. Es una
+operación puntual: revisa el contenido y respalda la base antes de ejecutarla.
 
 Para una base que ya tiene las migraciones `001` a `005`, ejecutar las migraciones `006` y `007`:
 

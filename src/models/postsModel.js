@@ -7,6 +7,7 @@ function mapPost(row) {
     description: row.description,
     price: row.price === null ? null : Number(row.price),
     price_type: row.price_type,
+    original_price: row.original_price === null ? null : Number(row.original_price),
     image_url: row.image_url,
     category: {
       id: row.category_id,
@@ -55,6 +56,7 @@ export async function listPosts({
       p.description,
       p.price,
       p.price_type,
+      p.original_price,
       p.image_url,
       p.created_at,
       c.id AS category_id,
@@ -97,6 +99,7 @@ export async function createPost({
   description,
   price,
   price_type,
+  original_price,
   image_url,
   category_id,
 }) {
@@ -109,9 +112,10 @@ export async function createPost({
         description,
         price,
         price_type,
+        original_price,
         image_url
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     )
     SELECT
@@ -120,6 +124,7 @@ export async function createPost({
       p.description,
       p.price,
       p.price_type,
+      p.original_price,
       p.image_url,
       p.created_at,
       c.id AS category_id,
@@ -138,6 +143,7 @@ export async function createPost({
     description,
     price,
     price_type,
+    original_price,
     image_url,
   ];
 
@@ -154,6 +160,7 @@ export async function findPostById(id) {
       p.description,
       p.price,
       p.price_type,
+      p.original_price,
       p.image_url,
       p.created_at,
       p.updated_at,
@@ -180,6 +187,7 @@ export async function updatePost({
   description,
   price,
   priceType,
+  originalPrice,
   imageUrl,
   categoryId,
 }) {
@@ -203,9 +211,10 @@ export async function updatePost({
       image_url = $4,
       category_id = $5,
       price_type = $6,
+      original_price = $7,
       updated_at = NOW()
-    WHERE id = $7
-      AND user_id = $8
+    WHERE id = $8
+      AND user_id = $9
     RETURNING id
   `;
 
@@ -216,6 +225,7 @@ export async function updatePost({
     imageUrl,
     categoryId,
     priceType,
+    originalPrice,
     postId,
     userId,
   ]);
@@ -251,6 +261,7 @@ export async function listOwnPosts({ userId, page, limit }) {
         p.description,
         p.price,
         p.price_type,
+        p.original_price,
         p.image_url,
         p.created_at,
         p.updated_at,
@@ -280,6 +291,7 @@ export async function listOwnPosts({ userId, page, limit }) {
               'description', pp.description,
               'price', pp.price,
               'price_type', pp.price_type,
+              'original_price', pp.original_price,
               'image_url', pp.image_url,
               'category', json_build_object(
                 'id', pp.category_id,

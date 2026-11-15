@@ -18,6 +18,7 @@ export function validatePost(req, res, next) {
     description,
     price,
     price_type = "fixed",
+    original_price = null,
     image_url,
     category_id,
   } = body;
@@ -79,6 +80,21 @@ export function validatePost(req, res, next) {
   }
 
   if (
+    original_price !== null &&
+    (
+      price_type === "quote" ||
+      typeof original_price !== "number" ||
+      !Number.isSafeInteger(original_price) ||
+      original_price > 999999999999 ||
+      original_price <= price
+    )
+  ) {
+    return res.status(400).json({
+      message: "El precio anterior debe ser un entero mayor al precio actual y de hasta 12 dígitos",
+    });
+  }
+
+  if (
     typeof category_id !== "number" ||
     !Number.isInteger(category_id) ||
     category_id <= 0 ||
@@ -90,7 +106,7 @@ export function validatePost(req, res, next) {
   }
 
   const localImagePattern =
-    /^\/assets\/servicios\/[a-z0-9][a-z0-9_-]*\.(?:webp|png|jpe?g)$/;
+    /^\/assets\/servicios\/[a-zA-Z0-9][a-zA-Z0-9_-]*\.(?:webp|png|jpe?g)$/;
 
   let validImageSource = false;
 
@@ -126,6 +142,7 @@ export function validatePost(req, res, next) {
     description: normalizedDescription,
     price,
     price_type,
+    original_price,
     image_url: normalizedImageUrl,
     category_id,
   };

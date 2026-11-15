@@ -73,6 +73,7 @@ export async function updatePublication(req, res, next) {
       description,
       price,
       price_type,
+      original_price,
       image_url,
       category_id,
     } = req.postInput;
@@ -84,6 +85,7 @@ export async function updatePublication(req, res, next) {
       description,
       price,
       priceType: price_type,
+      originalPrice: original_price,
       imageUrl: image_url,
       categoryId: category_id,
     });
