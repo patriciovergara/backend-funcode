@@ -110,6 +110,13 @@ TEST_POST_ID=REEMPLAZAR
 
 En producción, `NODE_ENV` debe configurarse en `production` y `FRONTEND_ORIGIN` debe contener únicamente los orígenes autorizados. Nunca dejar valores comodín ni expedir JWTs con secretos débiles.
 
+Para reCAPTCHA v3, configura `RECAPTCHA_SECRET` en el backend de producción.
+Los formularios de registro, inicio de sesión, contacto y cotización requieren
+un token válido, la acción correcta, un hostname incluido en `FRONTEND_ORIGIN`
+y una puntuación mínima de 0,5. Si Google no responde, se rechaza la solicitud.
+En desarrollo, la verificación se omite únicamente si no se configura el secreto;
+con un secreto configurado se aplica también localmente.
+
 El correo corporativo oficial del proyecto es `contacto@funcode.cl` y debe configurarse a través de Zoho Mail/SMTP con las variables `CONTACT_EMAIL`, `SMTP_HOST`, `SMTP_USER` y `SMTP_PASS`.
 
 Generar un secreto JWT:

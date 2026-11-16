@@ -8,10 +8,11 @@ import { validateRegister } from "../middlewares/validateRegister.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 import { getMyPosts } from "../controllers/postsController.js";
 import { validateMyPostsQuery } from "../middlewares/validateMyPostsQuery.js";
+import { verifyRecaptcha } from "../middlewares/verifyRecaptcha.js";
 
 const router = Router();
 
-router.post("/", validateRegister, registerUser);
+router.post("/", validateRegister, verifyRecaptcha("register"), registerUser);
 router.post("/verify", verifyRegistration);
 router.get("/me/posts", requireAuth, validateMyPostsQuery, getMyPosts);
 
