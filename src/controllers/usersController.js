@@ -93,7 +93,7 @@ export async function verifyRegistration(req, res, next) {
     }
 
     await client.query(
-      "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)",
+      "INSERT INTO users (name, email, password_hash, email_verified_at) VALUES ($1, $2, $3, NOW())",
       [pending.name, pending.email, pending.password_hash],
     );
     await client.query("DELETE FROM pending_registrations WHERE id = $1", [verificationId]);

@@ -82,7 +82,7 @@ export async function isTokenRevoked(payload) {
     return result.rowCount > 0;
   } catch (error) {
     console.error("No se pudo verificar si el token estaba revocado:", error.message);
-    return false;
+    throw error;
   }
 }
 

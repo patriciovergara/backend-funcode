@@ -16,7 +16,7 @@ export async function createUser({ name, email, passwordHash }) {
 
 export async function findUserByEmail(email) {
   const query = `
-    SELECT id, name, email, password_hash, role
+    SELECT id, name, email, password_hash, role, email_verified_at
     FROM users
     WHERE email = $1
   `;
@@ -28,7 +28,7 @@ export async function findUserByEmail(email) {
 
 export async function findUserById(id) {
   const query = `
-    SELECT id, name, email, role, created_at
+    SELECT id, name, email, role, created_at, email_verified_at
     FROM users
     WHERE id = $1
   `;

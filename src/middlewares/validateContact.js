@@ -1,4 +1,5 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_PATTERN = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
+const PHONE_PATTERN = /^\+?[0-9\s()-]+$/;
 
 function validateContact(req, res, next) {
   const errors = [];
@@ -18,8 +19,9 @@ function validateContact(req, res, next) {
 
   const phone = typeof body.phone === "string" ? body.phone.trim() : "";
 
-  if (phone && (phone.length < 7 || phone.length > 30)) {
-    errors.push("El teléfono debe tener entre 7 y 30 caracteres.");
+  const phoneDigits = phone.replace(/\D/g, "");
+  if (phone && (phone.length > 30 || !PHONE_PATTERN.test(phone) || phoneDigits.length < 8 || phoneDigits.length > 15)) {
+    errors.push("Ingresa un teléfono válido de 8 a 15 dígitos, sin letras.");
   }
 
   const message = typeof body.message === "string" ? body.message.trim() : "";

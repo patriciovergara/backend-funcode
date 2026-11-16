@@ -159,7 +159,16 @@ psql -h localhost -U postgres -d funcode -f sql/migrations/006_projects.sql
 psql -h localhost -U postgres -d funcode -f sql/migrations/007_litigio_project_image.sql
 psql -h localhost -U postgres -d funcode -f sql/migrations/008_email_verification.sql
 psql -h localhost -U postgres -d funcode -f sql/migrations/009_post_original_price.sql
+psql -h localhost -U postgres -d funcode -f sql/migrations/010_contact_email_verification.sql
 ```
+
+La migración `010` agrega el estado de verificación del correo y almacena
+temporalmente las solicitudes de contacto pendientes de confirmación. Aplícala
+una sola vez antes de publicar la API que la utiliza. Las cuentas antiguas,
+cuyo estado de verificación no se puede comprobar, deben verificar su correo
+una vez al usar el formulario; las cuentas nuevas se marcan al completar el
+registro. Los códigos de contacto vencen a los diez minutos y admiten cinco
+intentos. Las solicitudes vencidas se eliminan al iniciar una nueva solicitud.
 
 La migración `009` permite guardar un precio anterior opcional, mayor que el
 precio actual, para los servicios con precio fijo o desde. No crea ofertas
